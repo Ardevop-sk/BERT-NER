@@ -184,7 +184,7 @@ class DataProcessor(object):
     @classmethod
     def _read_data(cls,input_file):
         """Read a BIO data!"""
-        rf = open(input_file,'r')
+        rf = open(input_file,'r', encoding="utf8")
         lines = [];words = [];labels = []
         for line in rf:
             word = line.strip().split(' ')[0]
@@ -224,7 +224,7 @@ class NerProcessor(DataProcessor):
         "[PAD]" for padding
         :return:
         """
-        return ["[PAD]","B-MISC", "I-MISC", "O", "B-PER", "I-PER", "B-ORG", "I-ORG", "B-LOC", "I-LOC", "X","[CLS]","[SEP]"]
+        return ["[PAD]","Sud", "Osoba", "O", "Adresa", "Organizacia", "ICO", "Narodenie", "X","[CLS]","[SEP]"]
 
     def _create_example(self, lines, set_type):
         examples = []
