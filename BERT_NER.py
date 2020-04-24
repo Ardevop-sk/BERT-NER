@@ -72,6 +72,10 @@ flags.DEFINE_bool(
     "do_predict", False,
     "Whether to run the model in inference mode on the test set.")
 
+flags.DEFINE_bool(
+    "do_export", False,
+    "Whether to export the model to the servable model.")
+
 flags.DEFINE_integer("train_batch_size", 32, "Total batch size for training.")
 
 flags.DEFINE_integer("eval_batch_size", 8, "Total batch size for eval.")
@@ -595,6 +599,18 @@ def Writer(output_predict_file, result, batch_tokens, batch_labels, id2label):
             for i, prediction in enumerate(result):
                 _write_base(batch_tokens, id2label, prediction, batch_labels, wf, i)
 
+def serving_input_fn():
+    label_ids = tf.placeholder(tf.int32, [None], name='label_ids')
+    input_ids = tf.placeholder(tf.int32, [None, FLAGS.max_seq_length], name='input_ids')
+    input_mask = tf.placeholder(tf.int32, [None, FLAGS.max_seq_length], name='input_mask')
+    segment_ids = tf.placeholder(tf.int32, [None, FLAGS.max_seq_length], name='segment_ids')
+    input_fn = tf.estimator.export.build_raw_serving_input_receiver_fn({
+        'label_ids': label_ids,
+        'input_ids': input_ids,
+        'input_mask': input_mask,
+        'segment_ids': segment_ids,
+    })()
+    return input_fn
 
 def main(_):
     logging.set_verbosity(logging.INFO)
@@ -731,7 +747,9 @@ def main(_):
         # here if the tag is "X" means it belong to its before token, here for convenient evaluate use
         # conlleval.pl we  discarding it directly
         Writer(output_predict_file, result, batch_tokens, batch_labels, id2label)
-
+    if FLAGS.do_export:
+        estimator._export_to_tpu = False
+        path = estimator.export_savedmodel(FLAGS.output_dir, serving_input_fn)
 
 if __name__ == "__main__":
     flags.mark_flag_as_required("data_dir")
