@@ -364,7 +364,7 @@ def filed_based_convert_examples_to_features(examples, label_list,
 
         features = collections.OrderedDict()
         features["input_ids"] = create_int_feature(feature.input_ids)
-        features["mask"] = create_int_feature(feature.mask)
+        features["input_mask"] = create_int_feature(feature.mask)
         features["segment_ids"] = create_int_feature(feature.segment_ids)
         features["label_ids"] = create_int_feature(feature.label_ids)
         tf_example = tf.train.Example(features=tf.train.Features(feature=features))
@@ -378,7 +378,7 @@ def file_based_input_fn_builder(input_file, seq_length, is_training,
                                 drop_remainder):
     name_to_features = {
         "input_ids": tf.FixedLenFeature([seq_length], tf.int64),
-        "mask": tf.FixedLenFeature([seq_length], tf.int64),
+        "input_mask": tf.FixedLenFeature([seq_length], tf.int64),
         "segment_ids": tf.FixedLenFeature([seq_length], tf.int64),
         "label_ids": tf.FixedLenFeature([seq_length], tf.int64),
 
@@ -496,7 +496,7 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
         for name in sorted(features.keys()):
             logging.info("  name = %s, shape = %s" % (name, features[name].shape))
         input_ids = features["input_ids"]
-        mask = features["mask"]
+        mask = features["input_mask"]
         segment_ids = features["segment_ids"]
         label_ids = features["label_ids"]
         is_training = (mode == tf.estimator.ModeKeys.TRAIN)
@@ -602,12 +602,12 @@ def Writer(output_predict_file, result, batch_tokens, batch_labels, id2label):
 def serving_input_fn():
     label_ids = tf.placeholder(tf.int32, [None], name='label_ids')
     input_ids = tf.placeholder(tf.int32, [None, FLAGS.max_seq_length], name='input_ids')
-    input_mask = tf.placeholder(tf.int32, [None, FLAGS.max_seq_length], name='mask')
+    input_mask = tf.placeholder(tf.int32, [None, FLAGS.max_seq_length], name='input_mask')
     segment_ids = tf.placeholder(tf.int32, [None, FLAGS.max_seq_length], name='segment_ids')
     input_fn = tf.estimator.export.build_raw_serving_input_receiver_fn({
         'label_ids': label_ids,
         'input_ids': input_ids,
-        'mask': input_mask,
+        'input_mask': input_mask,
         'segment_ids': segment_ids,
     })()
     return input_fn
